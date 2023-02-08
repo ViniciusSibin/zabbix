@@ -12,11 +12,10 @@ def get_oid_index(ip, community, oid):
                               ObjectType(ObjectIdentity(oid)),
                               lexicographicMode=False):
         if errorIndication:
-            print(errorIndication)
+            result = False
             break
         elif errorStatus:
-            print('%s at %s' % (errorStatus.prettyPrint(),
-                                errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
+            result = False
             break
         else:
             for varBind in varBinds:

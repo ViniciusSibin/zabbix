@@ -8,27 +8,31 @@ def vsolution():
     bd = conn.cursor()
 
     # Executando uma consulta SELECT
-    bd.execute("SELECT * FROM olt")
+    bd.execute("SELECT * FROM olt WHERE fabricante='VSOLUTION' AND comunidade IS NOT NULL AND versaoSNMP IS NOT NULL AND ip IS NOT NULL")
 
     # Obtendo os resultados da consulta
     resultados = bd.fetchall()
 
     # Exibindo os resultados
-    for linha in resultados:
-        print(linha)
+    for olts in resultados:
+        ip = olts[2]
+        community = olts[5]
+
+        #Atualiza o nome da OLT no banco
+        sysName = ['1.3.6.1.2.1.1.5']
+        for oid in sysName:
+            result = get_oid_index(ip, community, oid)
+            if result:
+                if result[0][1] != olts[1] and result[0][1] != '':
+                    updateNome = "UPDATE olt SET nome='" + result[0][1] + "' WHERE ip='" + olts[2] + "'"
+                    bd.execute(updateNome)
+                    conn.commit()
+                    print(olts[0], '-->', olts[1], '-->', olts[2] , '-->', result)
+
+        #Atualiza as PONs
+        ponPortDownSpeed = ['1.3.6.1.4.1.37950.1.1.5.10.1.2.2.1.24']
 
     # Fechando a conexão
     conn.close()
-
-    #oids = ['1.3.6.1.4.1.37950.1.1.6.1.1.1.1.4.1']
-    """oids = ['1.3.6.1.2.1.1.5']
-
-    ip = '192.168.21.1'
-    community = 'mgp'
-
-    for oid in oids:
-        result = get_oid_index(ip, community, oid)
-        print(result)"""
-
 
 vsolution()
