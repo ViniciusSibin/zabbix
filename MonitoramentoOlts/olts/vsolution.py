@@ -42,8 +42,8 @@ def vsolution():
         oid_pon_tensao = ['.3.6.1.4.1.37950.1.1.5.10.13.1.1.3']
         oid_pon_temperatura = ['.3.6.1.4.1.37950.1.1.5.10.13.1.1.2']
 
-        #Coleta as informações das PONs
-        oid_onu_onu_index = ['1.3.6.1.4.1.37950.1.1.6.1.1.2.1.2']
+        #Coleta as informações das ONUs
+        """oid_onu_onu_index = ['1.3.6.1.4.1.37950.1.1.6.1.1.2.1.2']
         oid_onu_pon_Index = ['1.3.6.1.4.1.37950.1.1.6.1.1.2.1.1']
         oid_onu_posição = ['']
         oid_onu_numero_serial = ['1.3.6.1.4.1.37950.1.1.6.1.1.2.1.5.{PONINDEX}']
@@ -52,7 +52,7 @@ def vsolution():
         oid_onu_corrente = ['1.3.6.1.4.1.37950.1.1.6.1.1.3.1.5.{PONINDEX}']
         oid_onu_rx_Power = ['1.3.6.1.4.1.37950.1.1.6.1.1.3.1.7.{PONINDEX}']
         oid_onu_tx_Power = ['1.3.6.1.4.1.37950.1.1.6.1.1.3.1.6.{PONINDEX}']
-        oid_onu_status = ['1.3.6.1.4.1.37950.1.1.6.1.1.1.1.4.{PONINDEX}']
+        oid_onu_status = ['1.3.6.1.4.1.37950.1.1.6.1.1.1.1.4.{PONINDEX}']"""
 
 
     # Fechando a conexão
