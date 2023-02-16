@@ -19,6 +19,6 @@ def get_oid_index(ip, community, oid):
             break
         else:
             for varBind in varBinds:
-                result.append((varBind[0].prettyPrint().split(".")[-1], varBind[1].prettyPrint()))
+                result.append((varBind[1].prettyPrint()))
 
     return result
