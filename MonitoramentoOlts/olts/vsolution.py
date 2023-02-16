@@ -37,17 +37,30 @@ def vsolution():
 
         #Coleta as informações das PONs
         oid_pon_index = ['1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.1']
-        oid_pon_nome = ['1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.2']
-        oid_pon_xorrente = ['1.3.6.1.4.1.37950.1.1.5.10.13.1.1.4']
-        oid_pon_tx_Power = ['1.3.6.1.4.1.37950.1.1.5.10.13.1.1.5'] 
-        oid_pon_status = ['1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.3']
-        oid_pon_tensao = ['1.3.6.1.4.1.37950.1.1.5.10.13.1.1.3']
-        oid_pon_temperatura = ['1.3.6.1.4.1.37950.1.1.5.10.13.1.1.2']
-
+        
         for oid in oid_pon_index:
             result = get_oid_index(ip, community, oid)
-            if result:
-                print(olts[0], '-->', olts[1], '-->', olts[2] , '-->', result)
+            if not result:
+                print('Não foi possível acessar a: ', olts[1], '-->', olts[2])
+            else:
+                for pon_index in result:
+                    oid_pon_nome = '1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.2.' + str(pon_index)
+                    print(oid_pon_nome)
+                    oid_pon_corrente = '1.3.6.1.4.1.37950.1.1.5.10.13.1.1.4.' + str(pon_index)
+                    oid_pon_tx_Power = '1.3.6.1.4.1.37950.1.1.5.10.13.1.1.5.' + str(pon_index)
+                    oid_pon_status = '1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.6.' + str(pon_index)
+                    oid_pon_tensao = '1.3.6.1.4.1.37950.1.1.5.10.13.1.1.3.' + str(pon_index)
+                    oid_pon_temperatura = '1.3.6.1.4.1.37950.1.1.5.10.13.1.1.2.' + str(pon_index)
+
+                    pon_nome = get_oid_index(ip, community, oid_pon_nome)
+                    print(pon_nome)
+                    pon_corrente = get_oid_index(ip, community, oid_pon_corrente)
+                    pon_tx_Power = get_oid_index(ip, community, oid_pon_tx_Power)
+                    pon_status = get_oid_index(ip, community, oid_pon_status)
+                    pon_tensao = get_oid_index(ip, community, oid_pon_tensao)
+                    pon_temperatura = get_oid_index(ip, community, oid_pon_temperatura)
+                    
+                    print('INDEX:', pon_index, 'NOME: ', pon_nome, 'CORRENTE: ', pon_corrente, 'TX POWER: ', pon_tx_Power, 'STATUS: ', pon_status, 'TENSÃO: ', pon_tensao, 'TEMPERATURA: ', pon_temperatura)
 
         #Coleta as informações das ONUs
         """oid_onu_onu_index = ['1.3.6.1.4.1.37950.1.1.6.1.1.2.1.2']
