@@ -26,21 +26,22 @@ def get_oid_index(ip, community, oid):
 def consult_single_oid(community, ip_address, oid):
     errorIndication, errorStatus, errorIndex, varBinds = next(
         getCmd(SnmpEngine(),
-               CommunityData(community),
-               UdpTransportTarget((ip_address, 161)),
-               ContextData(),
-               ObjectType(ObjectIdentity(oid)))
+                CommunityData(community),
+                UdpTransportTarget((ip_address, 161)),
+                ContextData(),
+                ObjectType(ObjectIdentity(oid)),
+                lexicographicMode=False)
     )
-
     if errorIndication:
         print(errorIndication)
-        return None
-
+        return False
     elif errorStatus:
         print('%s at %s' % (errorStatus.prettyPrint(),
                             errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-        return None
-
+        return False
     else:
-        for varBind in varBinds:
-            return varBind[1].prettyPrint()
+        value = varBinds[0][1]
+        if isinstance(value, OctetString):
+            return value.prettyPrint().strip().strip('"').encode('utf-8').decode('ascii')
+        else:
+            return str(value)
