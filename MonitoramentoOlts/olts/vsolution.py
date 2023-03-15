@@ -1,3 +1,4 @@
+import re
 import sys
 sys.path.append("G:/Programacao/ZABBIX/Scripts/MonitoramentoOlts/lib")
 from conexao import conn
@@ -16,10 +17,10 @@ resultados = bd.fetchall()
 # Exibindo os resultados
 for olts in resultados:
     # Configurações de conexão SNMP
-    ip = olts[2]
-    community = olts[5]
-    # ip = '10.254.1.138'
-    # community = 'mgp'
+    # ip = olts[2]
+    # community = olts[5]
+    ip = '192.168.21.1'
+    community = 'mgp'
 
     # OIDs a serem consultados
     pon_index_oid = ["1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.1"]
@@ -48,15 +49,20 @@ for olts in resultados:
                 
                 #Consultando os valores dos OIDs
                 pon_nome_val = consult_single_oid(community, ip, pon_nome)
-                print(pon_nome_val)
                 if '0x504f' in pon_nome_val or not pon_nome_val:
                     # tratamento do valor encontrado
                     pon_nome_val = f'PON0/{i}'
                 pon_corrente_val = consult_single_oid(community, ip, pon_corrente)
+                print(pon_corrente_val)
                 pon_tx_power_val = consult_single_oid(community, ip, pon_tx_power)
                 pon_status_val = consult_single_oid(community, ip, pon_status)
                 pon_tensao_val = consult_single_oid(community, ip, pon_tensao)
                 pon_temperatura_val = consult_single_oid(community, ip, pon_temperatura)
+
+                pon_corrente_val = re.sub('[^0-9\.]', '', pon_corrente_val)
+                pon_tx_power_val = re.sub('[^0-9\.]', '', pon_tx_power_val)
+                pon_tensao_val = re.sub('[^0-9\.]', '', pon_tensao_val)
+                pon_temperatura_val = re.sub('[^0-9\.]', '', pon_temperatura_val)
 
                 # Cria a string de comando SQL para inserir no banco de dados
                 query = f"INSERT INTO pon (olt_id, pon_index, slot_porta, autorizados, amperagem, tensao, tx_power, status, temperatura) VALUES ({olts[0]}, {i}, '{pon_nome_val}', {pon_corrente_val}, {pon_tensao_val}, {pon_tx_power_val}, {pon_status_val}, {pon_temperatura_val})"
