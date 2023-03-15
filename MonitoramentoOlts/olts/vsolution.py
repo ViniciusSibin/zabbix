@@ -17,11 +17,15 @@ resultados = bd.fetchall()
 # Exibindo os resultados
 for olts in resultados:
     # Configurações de conexão SNMP
-    # ip = olts[2]
-    # community = olts[5]
-    ip = '192.168.21.1'
-    community = 'mgp'
+    ip = olts[2]
+    community = olts[5]
+    # ip = '192.168.21.1'
+    # community = 'mgp'
 
+    #######################################
+    ############### P O N s ###############
+    #######################################
+    
     # OIDs a serem consultados
     pon_index_oid = ["1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.1"]
     pon_nome_oid = "1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.2"
@@ -73,5 +77,13 @@ for olts in resultados:
                 # Salva as alterações no banco de dados
                 #conn.commit()
 
-                # Fecha a conexão com o banco de dados
-                #conn.close()
+                
+
+
+    #######################################
+    ############### O N U s ###############
+    #######################################
+
+
+    # Fecha a conexão com o banco de dados
+    #conn.close()
