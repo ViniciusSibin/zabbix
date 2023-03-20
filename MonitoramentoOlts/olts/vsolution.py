@@ -5,6 +5,7 @@ from conexao import conn
 from funcoes import *
 from pysnmp.hlapi import *
 
+
 def vsolution():
     # Criando um cursor
     bd = conn.cursor()
@@ -99,8 +100,6 @@ def vsolution():
                         onu_tensao_oid = "1.3.6.1.4.1.37950.1.1.6.1.1.3.1.4" + "." + str(i)
                         onu_temperatura_oid = "1.3.6.1.4.1.37950.1.1.6.1.1.3.1.3" + "." + str(i)
 
-                        #contagem de ONUs autorizadas
-                        autorizadas = 0
 
                         # Consulta o OID de índice PON
                         for oidONU in onu_index_oid:
@@ -152,7 +151,7 @@ def vsolution():
                                         print("Nenhum resultado encontrado")
                                     
                                     # Cria a string de comando SQL para inserir no banco de dados
-                                    autorizadas = autorizadas + 1
+                                    
                                     queryONU = f"INSERT INTO onu (pon_id, onu_index, posicao, status, sn, temperatura, voltagem, amperagem, rx_power, tx_power) VALUES ('{ponID}', '{onuIndex}', '{posicao}', '{onu_status_val}', '{onu_serial_val}', '{onu_temperatura_val}', '{onu_tensao_val}', '{onu_corrente_val}', '{onu_rx_power_val}', '{onu_tx_power_val}')"
                                     print(queryONU)
                                     # Executa a query SQL
@@ -160,7 +159,8 @@ def vsolution():
 
                                     # Salva as alterações no banco de dados
                                     conn.commit()
-
+                                    
+                        autorizadas = autorizados(ponID)
                         queryAutorizados = f"UPDATE pon SET autorizados='{autorizadas}' WHERE id='{ponID}';"
                         # Executa a query SQL
                         bd.execute(queryAutorizados)

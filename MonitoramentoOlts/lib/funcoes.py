@@ -1,4 +1,5 @@
 from pysnmp.hlapi import *
+from conexao import *
 
 def get_oid_index(ip, community, oid):
     result = []
@@ -45,3 +46,16 @@ def consult_single_oid(community, ip_address, oid):
             return value.prettyPrint().strip().strip('"').encode('utf-8').decode('ascii')
         else:
             return str(value)
+        
+
+def autorizados(pon_id):
+    consultaPON = conn.cursor()
+    consultaPON.execute(f"SELECT status FROM onu WHERE pon_id = {pon_id}")
+
+    ponReturn = consultaPON.fetchall()
+    soma = 0
+    
+    for autorizados in ponReturn:
+        soma =+ soma + 1
+    
+    return soma
