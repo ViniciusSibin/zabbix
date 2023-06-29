@@ -23,6 +23,30 @@ def get_oid_index(ip, community, oid):
                 result.append((varBind[1].prettyPrint()))
     return result
 
+def get_oid_index_teste(ip, community, oid):
+    result = []
+    for (errorIndication,
+         errorStatus,
+         errorIndex,
+         varBinds) in nextCmd(SnmpEngine(),
+                              CommunityData(community),
+                              UdpTransportTarget((ip, 161)),
+                              ContextData(),
+                              ObjectType(ObjectIdentity(oid)),
+                              lexicographicMode=False):
+        if errorIndication:
+            result = False
+            break
+        elif errorStatus:
+            result = False
+            break
+        else:
+            for varBind in varBinds:
+                chave = varBind[0].prettyPrint()  # Obtém a chave
+                valor = varBind[1].prettyPrint()  # Obtém o valor
+                result.append((chave, valor))  # Adiciona a chave e o valor como uma tupla à lista
+    return result
+
 
 def consult_single_oid(community, ip_address, oid):
     errorIndication, errorStatus, errorIndex, varBinds = next(
