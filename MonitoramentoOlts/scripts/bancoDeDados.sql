@@ -130,7 +130,7 @@ INSERT INTO olt_cidade (id_olt, id_cidade) VALUES(32, 11);
 CREATE TABLE IF NOT EXISTS pon(
 	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	olt_id INT NOT NULL,
-	pon_index INT,
+	pon_index INT NOT NULL,
 	slot_porta VARCHAR(9) NOT NULL,
 	descricao VARCHAR(30),
 	autorizados INT,
