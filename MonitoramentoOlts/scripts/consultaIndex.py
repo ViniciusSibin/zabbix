@@ -46,8 +46,8 @@ def consultaIndex():
                         print(f"INSERT INTO pon (olt_id, pon_index, slot_porta) VALUES ({olts[0]}, '{indexPON}', '{valorPON}')")
                         bd.execute(f"INSERT INTO pon (olt_id, pon_index, slot_porta) VALUES ({olts[0]}, '{indexPON}', '{valorPON}')")
                         
-            # # Salva as alterações no banco de dados
-            # conn.commit()
+            # Salva as alterações no banco de dados
+            conn.commit()
 
             #######################################
             ############### O N U s ###############

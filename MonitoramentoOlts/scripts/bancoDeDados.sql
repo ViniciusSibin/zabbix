@@ -134,10 +134,12 @@ CREATE TABLE IF NOT EXISTS pon(
 	slot_porta VARCHAR(9) NOT NULL,
 	descricao VARCHAR(30),
 	autorizados INT,
-	amperagem FLOAT,
+	corrente FLOAT,
+	tensao FLOAT,
 	tx_power FLOAT,
 	status INT,
 	temperatura FLOAT,
+	ult_atualizacao TIME,
 	FOREIGN KEY (olt_id) REFERENCES olt(id)
 )DEFAULT CHARSET=utf8 ENGINE=InnoDB;
 
@@ -153,5 +155,6 @@ CREATE TABLE IF NOT EXISTS onu(
 	amperagem FLOAT,
 	rx_power FLOAT,
 	tx_power FLOAT,
+	ult_atualizacao TIME,
 	FOREIGN KEY (pon_id) REFERENCES pon(id)
 )DEFAULT CHARSET=utf8 ENGINE=InnoDB;
