@@ -31,16 +31,14 @@ def informacoesonu():
             ############### P O N s ###############
             #######################################
             #Inseindo os index nos OIDs
-            onu_status_oid = "" + "." + str(onu_index)
-            onu_numeroSerial_oid = "" + "." + str(onu_index)
-            onu_temperatura_oid = "" + "." + str(onu_index)
-            onu_tensao_oid = "" + "." + str(onu_index)
-            onu_corrente_oid = "" + "." + str(onu_index)
-            onu_rx_power_oid = "" + "." + str(onu_index)
-            onu_tx_power_oid = "" + "." + str(onu_index)
-           
-            
-            
+            onu_status_oid = "1.3.6.1.4.1.5875.800.3.10.1.1.11" + "." + str(onu_index)
+            onu_numeroSerial_oid = "1.3.6.1.4.1.5875.800.3.10.1.1.10" + "." + str(onu_index)
+            onu_temperatura_oid = "1.3.6.1.4.1.5875.800.3.9.3.3.1.10" + "." + str(onu_index)
+            onu_tensao_oid = "1.3.6.1.4.1.5875.800.3.9.3.3.1.8" + "." + str(onu_index)
+            onu_corrente_oid = "1.3.6.1.4.1.5875.800.3.9.3.3.1.9" + "." + str(onu_index)
+            onu_rx_power_oid = "1.3.6.1.4.1.5875.800.3.9.3.3.1.6" + "." + str(onu_index)
+            onu_tx_power_oid = "1.3.6.1.4.1.5875.800.3.9.3.3.1.7" + "." + str(onu_index)
+                   
             #Consultando valores
             onu_status_val = consult_single_oid(olt_community, olt_ip, onu_status_oid)
             onu_numeroSerial_val = consult_single_oid(olt_community, olt_ip, onu_numeroSerial_oid)
@@ -50,7 +48,6 @@ def informacoesonu():
             onu_rx_power_val = consult_single_oid(olt_community, olt_ip, onu_rx_power_oid)
             onu_tx_power_val = consult_single_oid(olt_community, olt_ip, onu_tx_power_oid)
 
-
             #Corrigindo valores de retorno
             onu_corrente_val = float(re.sub('[^0-9\.-]', '', onu_corrente_val)) * 0.01
             onu_tensao_val = float(re.sub('[^0-9\.-]', '', onu_tensao_val)) * 0.01
@@ -58,14 +55,11 @@ def informacoesonu():
             onu_tx_power_val = float(re.sub('[^0-9\.-]', '', onu_tx_power_val)) * 0.01
             onu_temperatura_val = float(re.sub('[^0-9\.-]', '', onu_temperatura_val)) * 0.01
 
-            
-            print(f"\nUPDATE onu SET status='{onu_status_val}', sn='{onu_numeroSerial_val}', temperatura='{onu_temperatura_val:.2f}', tensao='{onu_tensao_val:.2f}', corrente='{onu_corrente_val:.2f}',  rx_power='{onu_rx_power_val:.2f}', tx_power='{onu_tx_power_val:.2f}',ult_atualizacao=NOW() WHERE id='{onu_id}'")
-
             #Atualizando o banco com as novas informações
-            #bd.execute(f"UPDATE onu SET descricao='{onu_descricao_val}', autorizados='{onu_autorizados_val}', corrente='{onu_corrente_val:.2f}', tensao='{onu_tensao_val:.2f}', tx_power='{onu_tx_power_val:.2f}',status='{onu_status_val}',temperatura='{onu_temperatura_val:.2f}',ult_atualizacao=NOW() WHERE id='{onu_id}'")
+            bd.execute(f"UPDATE onu SET status='{onu_status_val}', sn='{onu_numeroSerial_val}', temperatura='{onu_temperatura_val:.2f}', tensao='{onu_tensao_val:.2f}', corrente='{onu_corrente_val:.2f}',  rx_power='{onu_rx_power_val:.2f}', tx_power='{onu_tx_power_val:.2f}',ult_atualizacao=NOW() WHERE id='{onu_id}'")
            
             # Salva as alterações no banco de dados
-            #conn.commit()           
+            conn.commit()           
 
         elif olt_fabricante == 'VSOLUTION':
             ...

@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS pon(
 	tx_power FLOAT,
 	status INT,
 	temperatura FLOAT,
-	ult_atualizacao TIME,
+	ult_atualizacao DATETIME,
 	FOREIGN KEY (olt_id) REFERENCES olt(id)
 )DEFAULT CHARSET=utf8 ENGINE=InnoDB;
 
@@ -151,10 +151,10 @@ CREATE TABLE IF NOT EXISTS onu(
 	status INT,
 	sn VARCHAR(30),
 	temperatura FLOAT,
-	voltagem FLOAT,
-	amperagem FLOAT,
+	tensao FLOAT,
+	corrente FLOAT,
 	rx_power FLOAT,
 	tx_power FLOAT,
-	ult_atualizacao TIME,
+	ult_atualizacao DATETIME,
 	FOREIGN KEY (pon_id) REFERENCES pon(id)
 )DEFAULT CHARSET=utf8 ENGINE=InnoDB;
