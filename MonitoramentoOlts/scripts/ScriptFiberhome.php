@@ -1,9 +1,9 @@
 <?php
 function fiberhome(){
-	include_once("conexao.php");
+	require_once("conexao.php");
 	$execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
 	$inicio = date('H:i:s');
-	echo "\nIniciado às $fim\n";
+	echo "\nIniciado às $inicio\n";
 
 	while($queryConsultada = $execQuery->fetch_assoc()){
 		$olt_id = $queryConsultada['id'];
@@ -25,7 +25,7 @@ function fiberhome(){
 
 			foreach($OIDindexPon as $chavePon => $valorPon){
 				//CRIANDO UM INDEX
-				$indexPon = substr($chavePon, 45);
+				$indexPon = substr($chavePon, 38);
 
 				//Concatenando o OID com o index da PON
 				$MIBoltPonAuthOnuNumIndex = ("1.3.6.1.4.1.5875.800.3.9.3.4.1.12.$indexPon");
@@ -39,11 +39,11 @@ function fiberhome(){
 				$slot_porta = str_replace('"', '', substr($valorPon, 9));
 
 				$autorizados = substr(snmp2_get($host,$community,$MIBoltPonAuthOnuNumIndex), 9);
-				$corrente = (substr(snmp2_get($host,$community,$MIBoltPonOpticalCurrentIndex), 9)) * 0.01;
-				$tensao = (substr(snmp2_get($host,$community,$MIBoltPonOpticalVltageIndex), 9)) * 0.01;
-				$tx_power = (substr(snmp2_get($host,$community,$MIBoltPonTxOpticalPowerIndex), 9)) * 0.01;
+				$corrente = floatval(substr(snmp2_get($host,$community,$MIBoltPonOpticalCurrentIndex), 9)) * 0.01;
+				$tensao = floatval(substr(snmp2_get($host,$community,$MIBoltPonOpticalVltageIndex), 9)) * 0.01;
+				$tx_power = floatval(substr(snmp2_get($host,$community,$MIBoltPonTxOpticalPowerIndex), 9)) * 0.01;
 				$status = substr(snmp2_get($host,$community,$MIBoltPonOnlineStatusIndex), 9);
-				$temperatura = (substr(snmp2_get($host,$community,$MIBoltPonOpticalTemperatureIndex), 9)) * 0.01;
+				$temperatura = floatval(substr(snmp2_get($host,$community,$MIBoltPonOpticalTemperatureIndex), 9)) * 0.01;
 
 				$DBPonQuery = $mysqli->query("SELECT slot_porta FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 				$DBPonFetch = $DBPonQuery->fetch_assoc();
@@ -67,7 +67,7 @@ function fiberhome(){
 
 			foreach($OIDindexOnu as $chaveOnu => $valorOnu){
 				//inserindo index nas MIBs para consulta SNMP
-				$indexOnu = substr($chaveOnu, 45);
+				$indexOnu = substr($chaveOnu, 38);
 
 				//Concatenando o OID com o index da PON
 				$MIBonuStatusIndex = ("1.3.6.1.4.1.5875.800.3.10.1.1.11.$indexOnu");
@@ -160,7 +160,6 @@ function fiberhome(){
 
 						$DBPonQuery = $mysqli->query("SELECT slot_porta FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 						$DBPonFetch = $DBPonQuery->fetch_assoc();
-
 						if(is_null($DBPonFetch)) {
 							$inserirPON = "INSERT INTO pon (olt_id,pon_index,slot_porta, descricao, corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$descricao','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())";
 
@@ -241,6 +240,25 @@ function fiberhome(){
 					// Tratar a exceção do SNMP
 					echo "Erro durante a comunicação SNMP: " . $e->getMessage();
 				}
+			} elseif($queryConsultada['protocolo'] == 'EPON'){
+				try {
+
+				} catch (Exception $e) {
+					// Tratar a exceção do SNMP
+					echo "Erro durante a comunicação SNMP: " . $e->getMessage();
+				}
+			}
+
+			//Consulta a quantidade de clientes autorizados por pon
+			$autorizadosPon = $mysqli->query("select id from  pon where olt_id = $olt_id");
+			
+			//Percorrendo as PONs encontradas
+			foreach($autorizadosPon as $pon_id){
+				//Consultando todos as ONUs da PON atual
+				$onuAutorizadas = $mysqli->query("SELECT status FROM onu WHERE pon_id = {$pon_id['id']}");
+				$autorizados = $onuAutorizadas->num_rows;
+
+				$atualizaPON = $mysqli->query("UPDATE pon SET autorizados='$autorizados' WHERE id='{$pon_id['id']}'");
 			}
 		}
 	}
