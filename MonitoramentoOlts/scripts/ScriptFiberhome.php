@@ -26,7 +26,6 @@ function fiberhome(){
 			foreach($OIDindexPon as $chavePon => $valorPon){
 				//CRIANDO UM INDEX
 				$indexPon = substr($chavePon, 38);
-
 				//Concatenando o OID com o index da PON
 				$MIBoltPonAuthOnuNumIndex = ("1.3.6.1.4.1.5875.800.3.9.3.4.1.12.$indexPon");
 				$MIBoltPonOpticalCurrentIndex = ("1.3.6.1.4.1.5875.800.3.9.3.4.1.10.$indexPon");
@@ -48,15 +47,10 @@ function fiberhome(){
 				$DBPonQuery = $mysqli->query("SELECT slot_porta FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 				$DBPonFetch = $DBPonQuery->fetch_assoc();
 
-
 				if(is_null($DBPonFetch)) {
-						$inserirPON = "INSERT INTO pon (olt_id,pon_index,slot_porta,autorizados,corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$autorizados','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())";
-
-						$mysqli->query($inserirPON) or die($mysqli->error);
+					$mysqli->query("INSERT INTO pon (olt_id,pon_index,slot_porta,autorizados,corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$autorizados','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())");
 				} else {
-						$atualizarPon = "UPDATE pon SET autorizados='$autorizados', corrente='$corrente', tensao='$tensao', tx_power='$tx_power', status='$status', temperatura='$temperatura', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'";
-
-						$mysqli->query($atualizarPon) or die($mysqli->error);
+					$mysqli->query("UPDATE pon SET autorizados='$autorizados', corrente='$corrente', tensao='$tensao', tx_power='$tx_power', status='$status', temperatura='$temperatura', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 				}
 			}
 			// ################# FIM ################
