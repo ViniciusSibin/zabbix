@@ -11,6 +11,7 @@ function fiberhome(){
 		$community = $queryConsultada['comunidade'];
 
 		if($queryConsultada['fabricante'] == 'FIBERHOME'){
+			echo "\n\nIniciando a coleta da OLT $queryConsultada[fabricante] - $queryConsultada[nome]";
 			// ################# Atualizar o nome da OLT ##########################
 			$OLTName = str_replace('"', '', substr(snmp2_get($host,$community,"sysName.0"), 8));
 			$DBNameQuery = $mysqli->query("SELECT nome FROM olt WHERE ip = '$host'");
@@ -112,64 +113,55 @@ function fiberhome(){
 				}
 			}
 		} elseif($queryConsultada['fabricante'] == 'VSOLUTION'){
+			echo "\n\nIniciando a coleta da OLT $queryConsultada[fabricante] - $queryConsultada[nome]";
 			//################# PREENCHENDO A TABELA PON ################
 			//############# INDEX PON #############"
-			try {
-				$pon_nome_oid = snmp2_real_walk($host,$community,'1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.2');
+			$pon_nome_oid = snmp2_real_walk($host,$community,'1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.2');
 
-				if ($pon_nome_oid === false) {
-					// Erro de resposta SNMP
-					echo "Erro ao obter dados SNMP do dispositivo.";
-				} else {
-					// Processar os dados SNMP retornados
-					foreach($pon_nome_oid as $chavePon => $valorPon){
-						//CRIANDO UM INDEX
-						$indexPon = substr($chavePon, 49);
-						
-						//Concatenando o OID com o index da PON
-						$pon_corrente_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.4.$indexPon";
-						$pon_tx_power_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.5.$indexPon";
-						$pon_tensao_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.3.$indexPon";
-						$pon_temperatura_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.2.$indexPon";
-						$pon_descricao_oid = "1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.14.$indexPon";
+			if ($pon_nome_oid === false) {
+				// Erro de resposta SNMP
+				echo "Erro ao obter dados SNMP do dispositivo.";
+			} else {
+				// Processar os dados SNMP retornados
+				foreach($pon_nome_oid as $chavePon => $valorPon){
+					//CRIANDO UM INDEX
+					$indexPon = substr($chavePon, 49);
+					
+					//Concatenando o OID com o index da PON
+					$pon_corrente_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.4.$indexPon";
+					$pon_tx_power_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.5.$indexPon";
+					$pon_tensao_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.3.$indexPon";
+					$pon_temperatura_oid = "1.3.6.1.4.1.37950.1.1.5.10.13.1.1.2.$indexPon";
+					$pon_descricao_oid = "1.3.6.1.4.1.37950.1.1.5.10.1.2.1.1.14.$indexPon";
 
-						//Consultando o OID e já formantando o valor
-						$slot_porta = str_replace('/[^a-zA-z0-9\.-/]/', '', str_replace('"', '', substr($valorPon, 9)));
-						$descricao = str_replace('"', '', substr(snmp2_get($host,$community,$pon_descricao_oid), 9));
-						$corrente = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_corrente_oid));
-						$tensao = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_tensao_oid));
-						$tx_power = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_tx_power_oid));
-						$temperatura = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_temperatura_oid));
+					//Consultando o OID e já formantando o valor
+					$slot_porta = str_replace('/[^a-zA-z0-9\.-/]/', '', str_replace('"', '', substr($valorPon, 9)));
+					$descricao = str_replace('"', '', substr(snmp2_get($host,$community,$pon_descricao_oid), 9));
+					$corrente = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_corrente_oid));
+					$tensao = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_tensao_oid));
+					$tx_power = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_tx_power_oid));
+					$temperatura = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$pon_temperatura_oid));
 
-						if($slot_porta == 'no Descr'){
-							$slot_porta = "PON$indexPon";
-						}
+					if(empty($slot_porta) || $slot_porta == 'no Descr'){
+						$slot_porta = "PON$indexPon";
+					}
 
-						//Arrumando o valor do status
-						if(empty($tx_power) || $tx_power == '0'){
-							$status = 0;
-						} else {
-							$status = 1;
-						}
+					//Arrumando o valor do status
+					if(empty($tx_power) || $tx_power == '0'){
+						$status = 0;
+					} else {
+						$status = 1;
+					}
 
-						$DBPonQuery = $mysqli->query("SELECT slot_porta FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
-						$DBPonFetch = $DBPonQuery->fetch_assoc();
-						if(is_null($DBPonFetch)) {
-							$inserirPON = "INSERT INTO pon (olt_id,pon_index,slot_porta, descricao, corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$descricao','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())";
-
-							$mysqli->query($inserirPON) or die($mysqli->error);
-						} else {
-							$atualizarPon = "UPDATE pon SET descricao='$descricao', corrente='$corrente', tensao='$tensao', tx_power='$tx_power', status='$status', temperatura='$temperatura', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'";
-							
-							$mysqli->query($atualizarPon) or die($mysqli->error);
-						}
+					$DBPonQuery = $mysqli->query("SELECT slot_porta FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
+					$DBPonFetch = $DBPonQuery->fetch_assoc();
+					if(is_null($DBPonFetch)) {
+						$mysqli->query("INSERT INTO pon (olt_id,pon_index,slot_porta, descricao, corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$descricao','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())");
+					} else {
+						$mysqli->query("UPDATE pon SET slot_porta='$slot_porta', descricao='$descricao', corrente='$corrente', tensao='$tensao', tx_power='$tx_power', status='$status', temperatura='$temperatura', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 					}
 				}
-			} catch (Exception $e) {
-				// Tratar a exceção do SNMP
-				echo "Erro durante a comunicação SNMP: " . $e->getMessage();
 			}
-
 			//################# PREENCHENDO A TABELA ONU ################
 			//############# INDEX ONU #############"
 			if($queryConsultada['protocolo'] == 'GPON'){
@@ -255,7 +247,7 @@ function fiberhome(){
 				$mysqli->query("UPDATE pon SET autorizados='$autorizados' WHERE id='{$pon_id['id']}'");
 			}
 		} elseif($queryConsultada['fabricante'] == 'ZTE'){
-			echo "Iniciando a coleta das OLTs ZTE";
+			echo "\n\nIniciando a coleta da OLT $queryConsultada[fabricante] - $queryConsultada[nome]";
 			//################# PREENCHENDO A TABELA PON ################
 			//############# INDEX PON #############"
 			$OIDNomePon = snmp2_real_walk($host,$community,'1.3.6.1.2.1.31.1.1.1.1');
@@ -343,18 +335,20 @@ function fiberhome(){
 
 				$posicao = $ponConsultada['slot_porta'] . ":" . $indexOnu; 
 
-				$DBOnuQuery = $mysqli->query("SELECT sn FROM onu WHERE sn='$sn' AND pon_id = $indexOnu");
-				$DBOnuFetch = $DBOnuQuery->fetch_assoc();
+				$DBOnuQuery = $mysqli->query("SELECT sn FROM onu WHERE sn='$sn' AND pon_id = $pon_id");
+				$DBOnuNumRows = $DBOnuQuery->num_rows;
 
 				//echo "\n\nID da PON: $pon_id \nPosição: $posicao \nSerial Number: $sn \nStatus: $status \nRX_Power: $rx_power \nTX_Power: $tx_power\n\n";
 
-				if(is_null($DBOnuFetch)) {
-					echo"\nINSERT INTO onu (pon_id, onu_index, posicao, status, sn, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn','$temperatura','$tensao','$corrente','$rx_power','$tx_power', NOW())";
+				//echo "\nQuantidade de linhas com a consulta SELECT sn FROM onu WHERE sn='$sn' AND pon_id = $pon_id --> $DBOnuNumRows";
+
+				if($DBOnuNumRows === 0) {
+					//echo"\nINSERT INTO onu (pon_id, onu_index, posicao, status, sn, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn','$temperatura','$tensao','$corrente','$rx_power','$tx_power', NOW())";
 
 					$mysqli->query("INSERT INTO onu (pon_id, onu_index, posicao, status, sn, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn','$rx_power','$tx_power', NOW())");
 
 				} else {
-					echo "\nUPDATE onu SET status='$status', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'";
+					//echo "\nUPDATE onu SET status='$status', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'";
 					$mysqli->query("UPDATE onu SET status='$status', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'");
 				}
 			}
