@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS onu(
 	posicao VARCHAR(20) NOT NULL,
 	status INT,
 	sn VARCHAR(30),
+	usuario VARCHAR(50),
 	temperatura FLOAT,
 	tensao FLOAT,
 	corrente FLOAT,
