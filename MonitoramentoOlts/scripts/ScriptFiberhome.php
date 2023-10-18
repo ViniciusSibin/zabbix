@@ -1,7 +1,7 @@
 <?php
 function fiberhome(){
 	require_once("conexao.php");
-	$execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
+	$execQuery = $mysqli->query("SELECT * FROM olt WHERE fabricante = 'HUAWEI'") or die($mysqli->error);
 	$inicio = date('H:i:s');
 	echo "\nIniciado às $inicio\n";
 
@@ -194,7 +194,7 @@ function fiberhome(){
 							$onu_status_oid = "1.3.6.1.4.1.37950.1.1.6.1.1.1.1.4.$oid_indexOnu";
 							$onu_tensao_oid = "1.3.6.1.4.1.37950.1.1.6.1.1.3.1.4.$oid_indexOnu";
 							$onu_temperatura_oid = "1.3.6.1.4.1.37950.1.1.6.1.1.3.1.3.$oid_indexOnu";
-
+							
 							//Consultando o OID e já formantando o valor
 							$serialNumber = str_replace('"', '', substr($valorOnu, 9));
 							$status = preg_replace('/[^0-9\.-]/', '', snmp2_get($host,$community,$onu_status_oid));
@@ -381,120 +381,96 @@ function fiberhome(){
 				if(strrpos($nomePon, "GPON")){
 					//CRIANDO UM INDEX
 					$indexPon = substr($chavePon, 15);
-
+					
 					//Concatenando o OID com o index da PON
 					$MIBhwGponDeviceOltControlStatusIndex = ("1.3.6.1.4.1.2011.6.128.1.1.2.21.1.10.$indexPon");
 					$MIBtransmitPowerIndex = ("1.3.6.1.4.1.2011.6.128.1.1.2.23.1.4.$indexPon");
 					$MIBhwGponDeviceOltControlOntNumIndex = ("1.3.6.1.4.1.2011.6.128.1.1.2.21.1.16.$indexPon");
 
-					//$MIBbiasCurrentIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.5.$indexPon");
 					//$MIBzxAnOpticalSupplyVoltageIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.6.$indexPon");
 					//$MIBzxAnOpticalTemperatureIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.8.$indexPon");
+					//$descricao
 
 					//Consultando o OID e já formantando o valor
 					$slot_porta = str_replace('"', '', substr($nomePon, 8));
 					$status = intval(trim(substr(snmp2_get($host,$community,$MIBhwGponDeviceOltControlStatusIndex), 9)));
 					$tx_power = floatval(substr(snmp2_get($host,$community,$MIBtransmitPowerIndex), 9)) * 0.01;
-					$autorizadosPon = intval(trim(substr(snmp2_get($host,$community,$MIBhwGponDeviceOltControlOntNumIndex), 9)));
+					$autorizados = intval(trim(substr(snmp2_get($host,$community,$MIBhwGponDeviceOltControlOntNumIndex), 9)));
 					
-					//$corrente = floatval(substr(snmp2_get($host,$community,$MIBbiasCurrentIndex), 9)) * 0.001;
 					//$tensao = floatval(substr(snmp2_get($host,$community,$MIBzxAnOpticalSupplyVoltageIndex), 9)) * 0.001;
 					//$temperatura = floatval(substr(snmp2_get($host,$community,$MIBzxAnOpticalTemperatureIndex), 9)) * 0.001;
+					//$descricao = 
 
 					if($status !== 1){
 						$status = 0;
 					}
 
 					if($tx_power > 10){
-						$tx_power = 0.0;
+						$tx_power = 0;
 					}
 
 					$DBPonQuery = $mysqli->query("SELECT * FROM pon WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
-					$DBPonFetch = $DBPonQuery->num_rows;
-					
-					echo "\n\nSlot_porta: $slot_porta \nAutorizados: $autorizadosPon\nTX_Power: $tx_power \nStatus: $status";
+					$DBPonRow = $DBPonQuery->num_rows;
 
-					if($DBPonFetch === 0) {
-						//$mysqli->query("INSERT INTO pon (olt_id,pon_index,slot_porta,autorizados,corrente,tensao,tx_power,status,temperatura,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$autorizadosPon','$corrente','$tensao','$tx_power','$status','$temperatura', NOW())");
+					if($DBPonRow === 0) {
+						$mysqli->query("INSERT INTO pon (olt_id,pon_index,slot_porta,autorizados,tx_power,status,ult_atualizacao) VALUES ('$olt_id','$indexPon','$slot_porta','$autorizados','$tx_power','$status', NOW())");
 					} else {
-						//$mysqli->query("UPDATE pon SET autorizados='$autorizadosPon', corrente='$corrente', tensao='$tensao', tx_power='$tx_power', status='$status', temperatura='$temperatura', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
+						$mysqli->query("UPDATE pon SET autorizados='$autorizados', tx_power='$tx_power', status='$status', ult_atualizacao=NOW() WHERE olt_id = '$olt_id' AND slot_porta = '$slot_porta'");
 					}
 				}
 			}
 			// ################# FIM ################
-			die();
+
 			// ################# PREENCHENDO A TABELA ONU ################
 			// ############# INDEX ONU #############
-			$OIDSerialNumberOnu = snmp2_real_walk($host,$community,"1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.18");
+			$OIDUsuarioOnu = snmp2_real_walk($host,$community,"1.3.6.1.4.1.2011.6.128.1.1.2.43.1.9");
 
-			foreach($OIDSerialNumberOnu as $chaveOnu => $valorOnu){
+			foreach($OIDUsuarioOnu as $chaveOnu => $valorOnu){
 				//inserindo index nas MIBs para consulta SNMP
-				$indexPonOnu = explode(".",substr($chaveOnu, 52));
+				$indexPonOnu = explode(".",substr($chaveOnu, 48));
 				$indexPon = $indexPonOnu[0];
 				$indexOnu = $indexPonOnu[1];
 
 				//Concatenando o OID com o index da PON
-				$MIBonuStatusIndex = ("1.3.6.1.4.1.3902.1082.500.10.2.3.8.1.4.$indexPon.$indexOnu");
-				$MIBonuPonRxOpticalPowerIndex = ("1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.10.$indexPon.$indexOnu.1");
-				$MIBonuPonTxOpticalPowerIndex = ("1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.14.$indexPon.$indexOnu.1");
+				$onu_status_oid = ("1.3.6.1.4.1.2011.6.128.1.1.2.62.1.22.$indexPon.$indexOnu.1");
+				$onu_rx_power_oid = ("1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4.$indexPon.$indexOnu");
+				$onu_tx_power_oid = ("1.3.6.1.4.1.2011.6.128.1.1.2.51.1.3.$indexPon.$indexOnu");
+				$onu_tensao_oid = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.5.$indexPon.$indexOnu";
+				$onu_temperatura_oid = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.1.$indexPon.$indexOnu";
 				
-				$sn = str_replace('"', '',substr($valorOnu, 11));
-				$status = substr(snmp2_get($host,$community,$MIBonuStatusIndex), 9);
-				$rx_power = floatval(substr(snmp2_get($host,$community,$MIBonuPonRxOpticalPowerIndex), 9));
-				$tx_power = floatval(substr(snmp2_get($host,$community,$MIBonuPonTxOpticalPowerIndex), 9));
-
-				if($status == 4){
-					$status = 1;
-				} else {
+				$usuario = str_replace('"', '',substr($valorOnu, 8));
+				$status = intval(substr(snmp2_get($host,$community,$onu_status_oid), 9));
+				$rx_power = floatval(substr(snmp2_get($host,$community,$onu_rx_power_oid), 9)) * 0.01;
+				$tx_power = floatval(substr(snmp2_get($host,$community,$onu_tx_power_oid), 9)) * 0.01;
+				$tensao = floatval(substr(snmp2_get($host,$community,$onu_tensao_oid), 9)) * 0.001;
+				$temperatura = floatval(substr(snmp2_get($host,$community,$onu_temperatura_oid), 9));
+ 
+				if($status !== 1){
 					$status = 0;
+					$rx_power = 0;
+					$tx_power = 0;
+					$tensao = 0;
+					$temperatura = 0;
+					$corrente = 0;
 				}
 
-				if($rx_power >= 0 && $rx_power <= 32767){
-					$rx_power = ($rx_power * 0.002) - 30;
-				} elseif($rx_power > 32767) {
-					$rx_power = 0.0;
-				}
-
-				if($tx_power >= 0 && $tx_power <= 32767){
-					$tx_power = ($tx_power * 0.002) - 30;
-				} elseif($tx_power > 32767) {
-					$tx_power = 0.0;
-				}
-
+				$sn = "Sem OID";
+				
 				$pon_id_query = $mysqli->query("SELECT pon.id, pon.slot_porta FROM pon INNER JOIN olt ON olt.id = pon.olt_id WHERE olt_id = '$olt_id' AND  pon_index = '$indexPon'");
 				$ponConsultada = $pon_id_query->fetch_assoc();
 				$pon_id = $ponConsultada['id'];
 
 				$posicao = $ponConsultada['slot_porta'] . ":" . $indexOnu; 
 
-				$DBOnuQuery = $mysqli->query("SELECT sn FROM onu WHERE sn='$sn' AND pon_id = $pon_id");
+				$DBOnuQuery = $mysqli->query("SELECT * FROM onu WHERE usuario='$usuario' AND pon_id = $pon_id");
 				$DBOnuNumRows = $DBOnuQuery->num_rows;
 
-				//echo "\n\nID da PON: $pon_id \nPosição: $posicao \nSerial Number: $sn \nStatus: $status \nRX_Power: $rx_power \nTX_Power: $tx_power\n\n";
-
-				//echo "\nQuantidade de linhas com a consulta SELECT sn FROM onu WHERE sn='$sn' AND pon_id = $pon_id --> $DBOnuNumRows";
-
 				if($DBOnuNumRows === 0) {
-					//echo"\nINSERT INTO onu (pon_id, onu_index, posicao, status, sn, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn','$temperatura','$tensao','$corrente','$rx_power','$tx_power', NOW())";
-
-					$mysqli->query("INSERT INTO onu (pon_id, onu_index, posicao, status, sn, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn','$rx_power','$tx_power', NOW())");
+					$mysqli->query("INSERT INTO onu (pon_id, onu_index, posicao, status, sn, usuario, temperatura, tensao, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn', '$usuario', '$temperatura','$tensao','$rx_power','$tx_power', NOW())");
 
 				} else {
-					//echo "\nUPDATE onu SET status='$status', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'";
-					$mysqli->query("UPDATE onu SET status='$status', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'");
+					$mysqli->query("UPDATE onu SET status='$status', usuario='$usuario', temperatura='$temperatura', tensao='$tensao', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'");
 				}
-			}
-
-			//Consulta a quantidade de clientes autorizados por pon
-			$autorizadosPon = $mysqli->query("SELECT id FROM pon WHERE olt_id = $olt_id");
-			
-			//Percorrendo as PONs encontradas
-			foreach($autorizadosPon as $pon_id){
-				//Consultando todos as ONUs da PON atual
-				$onuAutorizadas = $mysqli->query("SELECT status FROM onu WHERE pon_id = {$pon_id['id']}");
-				$autorizados = $onuAutorizadas->num_rows;
-
-				$mysqli->query("UPDATE pon SET autorizados='$autorizados' WHERE id='{$pon_id['id']}'");
 			}
 		} else {
 			echo "OLT ainda não configurada";
