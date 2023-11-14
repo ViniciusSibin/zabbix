@@ -1,3 +1,7 @@
+CREATE USER 'monitoramento'@'%' IDENTIFIED BY 'Av!n!0306b';
+GRANT ALL PRIVILEGES ON * . * TO 'monitoramento'@'%';
+FLUSH PRIVILEGES;
+
 CREATE DATABASE IF NOT EXISTS monitoramento_OLTs
 	DEFAULT CHARACTER SET utf8
 	DEFAULT COLLATE utf8_general_ci;
@@ -9,6 +13,7 @@ CREATE TABLE IF NOT EXISTS olt(
 	nome VARCHAR(40) NOT NULL,
 	ip VARCHAR(15) NOT NULL,
 	fabricante VARCHAR(40),
+	protocolo VARCHAR(40),
 	versaoSNMP enum('1', '2c', '3') DEFAULT '2c',
 	comunidade VARCHAR(30),
 	porta VARCHAR(5)

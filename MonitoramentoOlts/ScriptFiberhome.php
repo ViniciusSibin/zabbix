@@ -1,7 +1,7 @@
 <?php
 function fiberhome(){
 	require_once("conexao.php");
-	$execQuery = $mysqli->query("SELECT * FROM olt where fabricante = 'VSOLUTION' and protocolo='GPON'") or die($mysqli->error);
+	$execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
 
 	while($queryConsultada = $execQuery->fetch_assoc()){
 		$olt_id = $queryConsultada['id'];
@@ -369,19 +369,21 @@ function fiberhome(){
 				$onu_temperatura_oid = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.1.$indexPon.$indexOnu";
 				
 				$usuario = str_replace('"', '',substr($valorOnu, 8));
-				$status = intval(substr(snmp2_get($host,$community,$onu_status_oid), 9));
+				//$status = intval(substr(snmp2_get($host,$community,$onu_status_oid), 9));
 				$rx_power = floatval(substr(snmp2_get($host,$community,$onu_rx_power_oid), 9)) * 0.01;
 				$tx_power = floatval(substr(snmp2_get($host,$community,$onu_tx_power_oid), 9)) * 0.01;
 				$tensao = floatval(substr(snmp2_get($host,$community,$onu_tensao_oid), 9)) * 0.001;
 				$temperatura = floatval(substr(snmp2_get($host,$community,$onu_temperatura_oid), 9));
  
-				if($status !== 1){
+				if($rx_power > 0){
 					$status = 0;
 					$rx_power = 0;
 					$tx_power = 0;
 					$tensao = 0;
 					$temperatura = 0;
 					$corrente = 0;
+				} else {
+					$status = 1;
 				}
 
 				$sn = "Sem OID";
@@ -397,7 +399,6 @@ function fiberhome(){
 
 				if($DBOnuNumRows === 0) {
 					$mysqli->query("INSERT INTO onu (pon_id, onu_index, posicao, status, sn, usuario, temperatura, tensao, rx_power, tx_power, ult_atualizacao) VALUES ('$pon_id','$indexOnu','$posicao','$status','$sn', '$usuario', '$temperatura','$tensao','$rx_power','$tx_power', NOW())");
-
 				} else {
 					$mysqli->query("UPDATE onu SET status='$status', usuario='$usuario', temperatura='$temperatura', tensao='$tensao', rx_power='$rx_power', tx_power='$tx_power', ult_atualizacao=NOW() WHERE pon_id='$pon_id' AND posicao='$posicao'");
 				}
