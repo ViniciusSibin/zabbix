@@ -1,5 +1,5 @@
 <?php
-$host = '172.31.255.51';
+$host = 'localhost';
 $db = 'monitoramento_OLTs';
 $user = 'vinicius';
 $pass = 'A132546b';
