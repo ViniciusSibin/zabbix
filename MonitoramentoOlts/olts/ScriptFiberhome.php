@@ -1,7 +1,7 @@
 <?php
 function Fiberhome(){
         require_once("conexao.php");
-        $execQuery = $mysqli->query("SELECT * FROM olt WHERE fabricante = 'FIBERHOME'") or die($mysqli->error);
+        $execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
         $inicio = date('H:i:s');
 
         while($queryConsultada = $execQuery->fetch_assoc()){
