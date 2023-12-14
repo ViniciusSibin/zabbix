@@ -1,7 +1,7 @@
 <?php
 function fiberhome(){
 	require_once("conexao.php");
-	$execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
+	$execQuery = $mysqli->query("SELECT * FROM olt WHERE fabricante = 'ZTE' and id = 33") or die($mysqli->error);
 
 	while($queryConsultada = $execQuery->fetch_assoc()){
 		$olt_id = $queryConsultada['id'];

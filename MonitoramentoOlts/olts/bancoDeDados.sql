@@ -164,3 +164,42 @@ CREATE TABLE IF NOT EXISTS onu(
 	ult_atualizacao DATETIME,
 	FOREIGN KEY (pon_id) REFERENCES pon(id)
 )DEFAULT CHARSET=utf8 ENGINE=InnoDB;
+
+
+COMMIT;
+
+SET @tempo_historico = 1;
+SET @sinal = -26;
+
+
+CREATE TABLE historico_clientes_sinal_ruim (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    data_hora DATETIME,
+    qtd_clientes INT
+);
+
+
+-- Habilitar o Event Scheduler, se ainda não estiver ativado
+SET GLOBAL event_scheduler = ON;
+
+-- Criar o evento para atualizar o histórico a cada minuto
+CREATE EVENT atualizar_historico
+ON SCHEDULE EVERY @tempo_historico MINUTE
+DO
+BEGIN
+    DECLARE client_count INT;
+
+    -- Calcula o count dos clientes com sinal ruim
+    SELECT COUNT(*) INTO client_count
+    FROM onu o
+    INNER JOIN pon p ON p.id = o.pon_id
+    INNER JOIN olt ON olt.id = p.olt_id 
+    WHERE o.rx_power BETWEEN -39.00 AND @sinal;
+
+    -- Insere o resultado na tabela de histórico
+    INSERT INTO historico_clientes_sinal_ruim (data_hora, qtd_clientes)
+    VALUES (NOW(), client_count);
+END;
+
+
+COMMIT;
