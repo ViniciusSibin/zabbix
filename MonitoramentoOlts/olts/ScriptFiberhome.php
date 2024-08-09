@@ -1,7 +1,15 @@
 <?php
-function fiberhome(){
-	require_once("conexao.php");
-	$execQuery = $mysqli->query("SELECT * FROM olt WHERE fabricante = 'ZTE' and id = 33") or die($mysqli->error);
+
+function consultaSinalOlts(){
+	echo "Iniciando consulta";
+
+	$mysqli = new mysqli('127.0.0.1', 'monitoramento', 'Av!n!0306b', 'monitoramento_OLTs');
+
+	if($mysqli->connect_errno){
+		die("Erro de conexão no banco de dados:" . $mysqli->connect_errno);
+	}
+
+	$execQuery = $mysqli->query("SELECT * FROM olt") or die($mysqli->error);
 
 	while($queryConsultada = $execQuery->fetch_assoc()){
 		$olt_id = $queryConsultada['id'];
@@ -17,8 +25,8 @@ function fiberhome(){
 			
 			foreach($olt_pon_name_index as $chavePon => $nome_pon){
 				//CRIANDO UM INDEX
-				//$indexPon = substr($chavePon, 38);
-				$indexPon = substr($chavePon, 45);
+				$indexPon = substr($chavePon, 38);
+				//$indexPon = substr($chavePon, 45);
 				
 				//Consultando o OID e já formantando o valor
 				$slot_porta = str_replace('"', '', substr($nome_pon, 9));
@@ -46,8 +54,8 @@ function fiberhome(){
 
 			foreach($OIDindexOnu as $chaveOnu => $valorOnu){
 				//inserindo index nas MIBs para consulta SNMP
-				//$indexOnu = substr($chaveOnu, 38);
-				$indexOnu = substr($chaveOnu, 45);
+				$indexOnu = substr($chaveOnu, 38);
+				//$indexOnu = substr($chaveOnu, 45);
 
 				//Coletando a posição da ONU
 				$pon_id_Index = str_replace('"', '', substr(substr($valorOnu, 9),0,9));
@@ -197,22 +205,14 @@ function fiberhome(){
 					//CRIANDO UM INDEX
 					$indexPon = substr($chavePon, 15);
 
-					//Concatenando o OID com o index da PON
-					$pon_desc_index = ("1.3.6.1.2.1.2.2.1.2.$indexPon");
-					$MIBbiasCurrentIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.5.$indexPon");
-					$MIBzxAnOpticalSupplyVoltageIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.6.$indexPon");
-					$MIBtransmitPowerIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.3.$indexPon");
-					$MIBifOperStatusIndex = ("1.3.6.1.2.1.2.2.1.8.$indexPon");
-					$MIBzxAnOpticalTemperatureIndex = ("1.3.6.1.4.1.3902.1082.30.40.2.4.1.8.$indexPon");
-
 					//Consultando o OID e já formantando o valor
 					$slot_porta = str_replace('"', '', substr($nomePon, 8));
-					$descricao = str_replace('"', '', substr(snmp2_get($host,$community,$pon_desc_index), 8));
-					$corrente = floatval(substr(snmp2_get($host,$community,$MIBbiasCurrentIndex), 9)) * 0.001;
-					$tensao = floatval(substr(snmp2_get($host,$community,$MIBzxAnOpticalSupplyVoltageIndex), 9)) * 0.001;
-					$tx_power = floatval(substr(snmp2_get($host,$community,$MIBtransmitPowerIndex), 9)) * 0.001;
-					$status = substr(snmp2_get($host,$community,$MIBifOperStatusIndex), 9);
-					$temperatura = floatval(substr(snmp2_get($host,$community,$MIBzxAnOpticalTemperatureIndex), 9)) * 0.001;
+					$descricao = str_replace('"', '', substr(snmp2_get($host,$community,"1.3.6.1.2.1.2.2.1.2.$indexPon"), 8));
+					$corrente = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.30.40.2.4.1.5.$indexPon"), 9)) * 0.001;
+					$tensao = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.30.40.2.4.1.6.$indexPon"), 9)) * 0.001;
+					$tx_power = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.30.40.2.4.1.3.$indexPon"), 9)) * 0.001;
+					$status = substr(snmp2_get($host,$community,"1.3.6.1.2.1.2.2.1.8.$indexPon"), 9);
+					$temperatura = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.30.40.2.4.1.8.$indexPon"), 9)) * 0.001;
 
 					if($status == "down(2)"){
 						$status = 0;
@@ -239,21 +239,15 @@ function fiberhome(){
 
 			foreach($OIDSerialNumberOnu as $chaveOnu => $valorOnu){
 				//inserindo index nas MIBs para consulta SNMP
-				$indexPonOnu = explode(".",substr($chaveOnu, 52));
+				$indexPonOnu = explode(".",substr($chaveOnu, 34));
 				$indexPon = $indexPonOnu[0];
 				$indexOnu = $indexPonOnu[1];
-
-				//Concatenando o OID com o index da PON
-				$MIBonuStatusIndex = ("1.3.6.1.4.1.3902.1082.500.10.2.3.8.1.4.$indexPon.$indexOnu");
-				$MIBonuPonRxOpticalPowerIndex = ("1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.10.$indexPon.$indexOnu.1");
-				$MIBonuPonTxOpticalPowerIndex = ("1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.14.$indexPon.$indexOnu.1");
-				$onu_nome_usuario = ("1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.2.$indexPon.$indexOnu");
 				
 				$sn = str_replace('"', '',substr($valorOnu, 11));
-				$usuario = str_replace('"', '', substr(snmp2_get($host,$community,$onu_nome_usuario), 8));
-				$status = substr(snmp2_get($host,$community,$MIBonuStatusIndex), 9);
-				$rx_power = floatval(substr(snmp2_get($host,$community,$MIBonuPonRxOpticalPowerIndex), 9));
-				$tx_power = floatval(substr(snmp2_get($host,$community,$MIBonuPonTxOpticalPowerIndex), 9));
+				$usuario = str_replace('"', '', substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.2.$indexPon.$indexOnu"), 8));
+				$status = substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.500.10.2.3.8.1.4.$indexPon.$indexOnu"), 9);
+				$rx_power = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.10.$indexPon.$indexOnu.1"), 9));
+				$tx_power = floatval(substr(snmp2_get($host,$community,"1.3.6.1.4.1.3902.1082.500.20.2.2.2.1.14.$indexPon.$indexOnu.1"), 9));
 
 				if($status == 4){
 					$status = 1;
@@ -374,7 +368,7 @@ function fiberhome(){
 				$tx_power = floatval(substr(snmp2_get($host,$community,$onu_tx_power_oid), 9)) * 0.01;
 				$tensao = floatval(substr(snmp2_get($host,$community,$onu_tensao_oid), 9)) * 0.001;
 				$temperatura = floatval(substr(snmp2_get($host,$community,$onu_temperatura_oid), 9));
- 
+
 				if($rx_power > 0){
 					$status = 0;
 					$rx_power = 0;
@@ -409,5 +403,5 @@ function fiberhome(){
 	}
 }
 
-fiberhome();
+consultaSinalOlts();
 ?>
